@@ -1,7 +1,14 @@
 import random, re
+import numpy as np, numpy.random
 from pprint import pprint
 from math import log
 
+# Creates a 'State' class for each state of the HMM.
+# Can be configured to any number of states the user desires.
+# Each state takes in one argument: `letter_list`,
+# which stores a simple list of all "lettters" in the input text.
+# Each state is to be named later based on the number of num_states
+# input by the user.
 class State():
     name = ''
 
@@ -11,20 +18,15 @@ class State():
     def __repr__(self):
         return self.name
 
+# This function takes in a list `items` as its only argument
+# and returns a dictionary that randomly assigns
 def probs(items):
-    random.shuffle(items)
     item_probs = {}
 
-    sum = 1
-    i = 0
-    for item in items:
-        if i < len(items) - 1:
-            rand = random.uniform(0, sum)
-            item_probs[item] = rand
-            sum -= rand
-        else:
-            item_probs[item] = sum
-        i += 1
+    probability_array = np.random.dirichlet(np.ones(len(items)), size = 1)
+    combined_items_probs = list(zip(items, probability_array[0]))
+    for (it, prob) in combined_items_probs:
+        item_probs[it] = prob
 
     return item_probs
 
@@ -111,8 +113,11 @@ for alph_sum in alpha_totals:
     plog = get_plog(alpha_totals[alph_sum])
     plogs[alph_sum] = plog
 
-pprint(plogs)
-pprint(sum(plogs.values()))
+#pprint(plogs)
+#pprint(sum(plogs.values()))
+
+pprint(alpha_totals['yeah#'])
+pprint(beta_totals['yeah#'])
 
 j = 0
 if VerboseFlag == True:

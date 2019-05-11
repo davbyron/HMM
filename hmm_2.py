@@ -1,4 +1,5 @@
 import random, re
+import numpy as np, numpy.random
 from pprint import pprint
 from math import log
 
@@ -12,19 +13,12 @@ class State():
         return self.name
 
 def probs(items):
-    random.shuffle(items)
     item_probs = {}
 
-    sum = 1
-    i = 0
-    for item in items:
-        if i < len(items) - 1:
-            rand = random.uniform(0, sum)
-            item_probs[item] = rand
-            sum -= rand
-        else:
-            item_probs[item] = sum
-        i += 1
+    probability_array = np.random.dirichlet(np.ones(len(items)), size = 1)
+    combined_items_probs = list(zip(items, probability_array[0]))
+    for (it, prob) in combined_items_probs:
+        item_probs[it] = prob
 
     return item_probs
 
