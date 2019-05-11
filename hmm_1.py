@@ -19,7 +19,8 @@ class State():
         return self.name
 
 # This function takes in a list `items` as its only argument
-# and returns a dictionary that randomly assigns
+# and returns a dictionary that randomly assigns values
+# between 0 and 1 via the Dirichlet distribution.
 def probs(items):
     item_probs = {}
 
@@ -30,6 +31,10 @@ def probs(items):
 
     return item_probs
 
+# This function calculates the forward variable `alpha`
+# for each letter (`t`) for each state specified.
+# This function was originally provided by Prof. Goldsmith in a handout
+# and adjusted slightly to cooperate with the rest of my program.
 def forward(states, pi, this_word):
     alpha = {}
     for s in states:
@@ -41,6 +46,10 @@ def forward(states, pi, this_word):
                 alpha[(to_state, t)] += alpha[(from_state, t - 1)] * from_state.letter_probs[this_word[t - 1]] * from_state.a
     return alpha
 
+# This function calculates the backward variable `beta`
+# for each letter (`t`) for each state specified.
+# This function was originally provided by Prof. Goldsmith in a handout
+# and adjusted slightly to cooperate with the rest of my program.
 def backward(states, this_word):
     beta = {}
     last = len(this_word)
@@ -53,12 +62,16 @@ def backward(states, this_word):
                 beta[(from_state, t)] += beta[(to_state, t + 1)] * from_state.letter_probs[this_word[t]] * from_state.a
     return beta
 
-def get_plog(a):
-    return -log(a, 2)
+# Calculates the inverse log base 2 of a number `x`.
+# Prof. Goldsmith refers to this as the "plog"---hence the function name.
+def get_plog(x):
+    return -log(x, 2)
 
 letters = []
 wds = []
 
+# Reads file for analysis.
+# Assumes that file contains one word per line.
 with open('english1000.txt') as f:
     for line in f:
         line = line[:-1] + '#'
@@ -75,9 +88,14 @@ states = []
 pis = list(range(num_states))
 pi_probs = probs(pis)
 
+# Create each state and add it to the list of states (`states`).
 for num in range(num_states):
     states.append(State(letters))
 
+
+# Creates properties for each state.
+# Assigns an even transition probability (`state.a`) initially; this
+# will be updated in a later iteration of the project.
 m = 0
 for state in states:
     state.name = f'State {str(m)}'
@@ -87,28 +105,35 @@ for state in states:
 
 alphas = {}
 betas = {}
-alpha_totals = {}
-beta_totals = {}
+alpha_totals = {} # String probability for each word given its alphas.
+beta_totals = {} # String probability for each word given its betas.
 plogs = {}
 
+# Calculates the alphas and betas for each letter for each
+# possible state transition.
+# Also initializes string probability for each word given the
+# alphas and betas.
 for w in wds:
     alphas[w] = forward(states, pi_probs, w)
     betas[w] = backward(states, w)
     alpha_totals[w] = 0
     beta_totals[w] = 0
 
+# Calculates string probability given its alphas.
 for w in alphas:
     for alph in alphas[w]:
         s, t = alph
         if t == len(alphas[w]) / 2 - 1: # This is a problem for odd number of states
             alpha_totals[w] += alphas[w][alph]
 
+# Calculates string probability given its betas.
 for w in betas:
     for bet in betas[w]:
         s, t = bet
         if t == 0:
             beta_totals[w] += pi_probs[int(s.name[-1])] * betas[w][bet]
 
+# Calculates the plog of each word.
 for alph_sum in alpha_totals:
     plog = get_plog(alpha_totals[alph_sum])
     plogs[alph_sum] = plog

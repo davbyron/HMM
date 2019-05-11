@@ -3,6 +3,12 @@ import numpy as np, numpy.random
 from pprint import pprint
 from math import log
 
+# Creates a 'State' class for each state of the HMM.
+# Can be configured to any number of states the user desires.
+# Each state takes in one argument: `letter_list`,
+# which stores a simple list of all "lettters" in the input text.
+# Each state is to be named later based on the number of num_states
+# input by the user.
 class State():
     name = ''
 
@@ -12,6 +18,9 @@ class State():
     def __repr__(self):
         return self.name
 
+# This function takes in a list `items` as its only argument
+# and returns a dictionary that randomly assigns values
+# between 0 and 1 via the Dirichlet distribution.
 def probs(items):
     item_probs = {}
 
@@ -22,6 +31,10 @@ def probs(items):
 
     return item_probs
 
+# This function calculates the forward variable `alpha`
+# for each letter (`t`) for each state specified.
+# This function was originally provided by Prof. Goldsmith in a handout
+# and adjusted slightly to cooperate with the rest of my program.
 def forward(states, pi, this_word):
     alpha = {}
     for s in states:
@@ -33,6 +46,10 @@ def forward(states, pi, this_word):
                 alpha[(to_state, t)] += alpha[(from_state, t - 1)] * from_state.letter_probs[this_word[t - 1]] * from_state.a
     return alpha
 
+# This function calculates the backward variable `beta`
+# for each letter (`t`) for each state specified.
+# This function was originally provided by Prof. Goldsmith in a handout
+# and adjusted slightly to cooperate with the rest of my program.
 def backward(states, this_word):
     beta = {}
     last = len(this_word)
@@ -45,6 +62,8 @@ def backward(states, this_word):
                 beta[(from_state, t)] += beta[(to_state, t + 1)] * from_state.letter_probs[this_word[t]] * from_state.a
     return beta
 
+# This function calculates the soft counts for each letter of the input word
+# for each state transition possible and returns those values in a dictionary.
 def soft_counts(states, this_word, alphas, betas, totals):
     sc = {}
     for t in range(0, len(this_word)):
@@ -53,12 +72,16 @@ def soft_counts(states, this_word, alphas, betas, totals):
                 sc[(this_word[t], from_state, to_state)] = (alphas[this_word][(from_state, t)] * from_state.a * from_state.letter_probs[this_word[t]] * betas[this_word][(to_state, t + 1)]) / totals[this_word]
     return sc
 
+# Calculates the inverse log base 2 of a number `x`.
+# Prof. Goldsmith refers to this as the "plog"---hence the function name.
 def get_plog(x):
     return -log(x, 2)
 
 letters = []
 wds = []
 
+# Reads file for analysis.
+# Assumes that file contains one word per line.
 with open('english1000.txt') as f:
     for line in f:
         line = line[:-1] + '#'
@@ -74,9 +97,13 @@ states = []
 pis = list(range(num_states))
 pi_probs = probs(pis)
 
+# Create each state and add it to the list of states (`states`).
 for num in range(num_states):
     states.append(State(letters))
 
+# Creates properties for each state.
+# Assigns an even transition probability (`state.a`) initially; this
+# will be updated in a later iteration of the project.
 m = 0
 for state in states:
     state.name = f'State {str(m)}'
@@ -86,34 +113,45 @@ for state in states:
 
 alphas = {}
 betas = {}
-alpha_totals = {}
-beta_totals = {}
+alpha_totals = {} # String probability for each word given its alphas.
+beta_totals = {} # String probability for each word given its betas.
 plogs = {}
 
+# Calculates the alphas and betas for each letter for each
+# possible state transition.
+# Also initializes string probability for each word given the
+# alphas and betas.
 for w in wds:
     alphas[w] = forward(states, pi_probs, w)
     betas[w] = backward(states, w)
     alpha_totals[w] = 0
     beta_totals[w] = 0
 
+# Calculates string probability given its alphas.
 for w in alphas:
     for alph in alphas[w]:
         s, t = alph
         if t == len(alphas[w]) / 2 - 1: # This is a problem for odd number of states
             alpha_totals[w] += alphas[w][alph]
 
+# Calculates string probability given its betas.
 for w in betas:
     for bet in betas[w]:
         s, t = bet
         if t == 0:
             beta_totals[w] += pi_probs[int(s.name[-1])] * betas[w][bet]
 
+# Calculates the plog of each word.
 for alph_sum in alpha_totals:
     plog = get_plog(alpha_totals[alph_sum])
     plogs[alph_sum] = plog
 
 letter_soft_counts = {}
 
+# Calculates the soft counts of each letter in each word.
+# If the soft counts of a letter in the iterated word is not already
+# in `letter_soft_counts`, add it (since the soft count values of each letter
+# should be consistent across the input text).
 for w in wds:
     word_soft_counts = soft_counts(states, w, alphas, betas, alpha_totals)
     for (letter, s1, s2) in word_soft_counts:
