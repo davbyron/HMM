@@ -75,7 +75,6 @@ with open('english1000.txt') as f:
                 letters.append(c)
 
 num_states = int(input('How many states would you like to use?: '))
-VerboseFlag = False
 
 states = []
 pis = list(range(num_states))
@@ -119,21 +118,26 @@ for alph_sum in alpha_totals:
     plog = get_plog(alpha_totals[alph_sum])
     plogs[alph_sum] = plog
 
-word_soft_counts = {}
+letter_soft_counts = {}
 
 for w in wds:
-    word_soft_counts[w] = soft_counts(states, w, alphas, betas, alpha_totals)
+    word_soft_counts = soft_counts(states, w, alphas, betas, alpha_totals)
+    for (letter, s1, s2) in word_soft_counts:
+        if (letter, s1, s2) not in letter_soft_counts:
+            letter_soft_counts[(letter, s1, s2)] = word_soft_counts[(letter, s1, s2)]
 
-pprint(word_soft_counts)
+pprint(letter_soft_counts)
 
-j = 0
+VerboseFlag = False
+
+# Output of Initialization
 if VerboseFlag == True:
     print('-' * 33, '\n')
-    print('-\t Initialization\t\t -')
+    print('-\tInitialization\t\t-')
     print('-' * 33)
 
     for state in states:
-        print(f'\nCreating State {j}')
+        print(f'\nCreating {state.name}')
         print('Transitions')
 
         for num in range(num_states):
@@ -141,11 +145,43 @@ if VerboseFlag == True:
 
         print('\nEmission probabilities')
         for letter in state.letter_probs:
-            print(f'\tLetter\t{letter}\t{state.letter_probs[letter]}')
-
-        j += 1
+            print(f'\tLetter\t{letter}\t{round(state.letter_probs[letter], 4)}')
 
     print('\n', '-' * 33)
     print('Pi:')
     for pi in pi_probs:
-        print(f'State\t{pi}\t{pi_probs[pi]}')
+        print(f'State\t{pi}\t{round(pi_probs[pi], 4)}')
+
+VerboseFlag = False
+
+# Output of Alphas & Betas
+if VerboseFlag == True:
+    print('-' * 33, '\n')
+    print('-\tIteration Number 0\t-')
+    print('-' * 33)
+
+    for w in wds:
+        print(f'\n*** word: {w} ***\n')
+
+        print('Alphas:')
+        print('Time 1:')
+        for state in states:
+            print(f'\t{state.name}: {pi_probs[int(state.name[-1])]}')
+        for letter in w:
+            print(f'Time {w.index(letter) + 2}:')
+            for (s, t) in alphas[w]:
+                if t == w.index(letter) + 1:
+                    print(f'\t{s.name}: {alphas[w][(s, t)]}')
+
+        print('\nBetas:')
+        for letter in w:
+            print(f'Time {w.index(letter) + 1}:')
+            for (s, t) in betas[w]:
+                if t == w.index(letter):
+                    print(f'\t{s.name}: {betas[w][(s, t)]}')
+        print(f'Time {len(w) + 1}:')
+        for state in states:
+            print(f'\t{state.name}: 1')
+
+        print(f'\nString probability from Alphas: {alpha_totals[w]}')
+        print(f'String probability from Betas: {beta_totals[w]}')
