@@ -137,12 +137,6 @@ for alph_sum in alpha_totals:
     plog = get_plog(alpha_totals[alph_sum])
     plogs[alph_sum] = plog
 
-#pprint(plogs)
-#pprint(sum(plogs.values()))
-
-pprint(alpha_totals['yeah#'])
-pprint(beta_totals['yeah#'])
-
 VerboseFlag = False
 
 # Output of Initialization
@@ -200,3 +194,11 @@ if VerboseFlag == True:
 
         print(f'\nString probability from Alphas: {alpha_totals[w]}')
         print(f'String probability from Betas: {beta_totals[w]}')
+
+VerboseFlag = True
+
+# Output of plogs
+if VerboseFlag == True:
+    for word in plogs:
+        print(f'{word[:-1]}\t\t{round(plogs[word], 4)}')
+    print(f'\nSum of all plogs: {round(sum(plogs.values()), 4)}')
