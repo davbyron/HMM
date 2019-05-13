@@ -72,6 +72,14 @@ def soft_counts(states, this_word, alphas, betas, totals):
                 sc[(this_word[t], from_state, to_state)] = (alphas[this_word][(from_state, t)] * from_state.a * from_state.letter_probs[this_word[t]] * betas[this_word][(to_state, t + 1)]) / totals[this_word]
     return sc
 
+def soft_counts_initial(states, this_word, alphas, betas, totals):
+    sc = {}
+    for t in range(0, 1):
+        for from_state in states:
+            for to_state in states:
+                sc[(this_word[t], from_state, to_state)] = (alphas[this_word][(from_state, t)] * from_state.a * from_state.letter_probs[this_word[t]] * betas[this_word][(to_state, t + 1)]) / totals[this_word]
+    return sc
+
 # Calculates the inverse log base 2 of a number `x`.
 # Prof. Goldsmith refers to this as the "plog"---hence the function name.
 def get_plog(x):
@@ -158,8 +166,6 @@ for w in wds:
         if (letter, s1, s2) not in letter_soft_counts:
             letter_soft_counts[(letter, s1, s2)] = word_soft_counts[(letter, s1, s2)]
 
-pprint(letter_soft_counts)
-
 VerboseFlag = False
 
 # Output of Initialization
@@ -217,3 +223,12 @@ if VerboseFlag == True:
 
         print(f'\nString probability from Alphas: {alpha_totals[w]}')
         print(f'String probability from Betas: {beta_totals[w]}')
+
+VerboseFlag = False
+
+# Output of soft counts
+if VerboseFlag == True:
+    for c in sorted(letters):
+        for (letter, s1, s2) in letter_soft_counts:
+            if letter == c:
+                print(f'{letter}\t{s1.name[-1]}\t{s2.name[-1]}\t{round(letter_soft_counts[(letter, s1, s2)], 4)}')
