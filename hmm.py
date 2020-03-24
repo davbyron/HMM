@@ -2,6 +2,10 @@ import random, re
 import numpy as np, numpy.random
 from pprint import pprint
 from math import log
+from time import strftime
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 
 # Creates a 'State' class for each state of the HMM.
 # Can be configured to any number of states the user desires.
@@ -178,7 +182,7 @@ letters = []
 wds = []
 
 # Reads file for analysis.
-# Assumes that file contains one word per line.
+# Assumes that the file contains one word per line.
 with open('english1000.txt') as f:
     for line in f:
         line = line[:-1] + '#'
@@ -238,10 +242,14 @@ for w in betas:
         if t == 0:
             beta_totals[w] += pi_probs[int(s.name[-1])] * betas[w][(s, t)]
 
-# Calculates the plog of each word.
-'''for w in alpha_totals:
-    plog = get_plog(alpha_totals[w])
-    plogs[w] = plog'''
+# IMPORTANT!!
+# The following lines of code that begin with an if statement
+# regarding `VerboseFlag` give in-depth detail about each process
+# of the HMM.
+# If you would like to see any or all of these outputs,
+# simply change the `VerboseFlag` value prior to the
+# section of interest to True.
+# The most important of these is the output of Maximization.
 
 VerboseFlag = False
 
@@ -318,7 +326,7 @@ if VerboseFlag == True:
             if letter == c:
                 print(f'{letter}\t{s1.name[-1]}\t{s2.name[-1]}\t{round(letter_soft_counts[(letter, s1, s2)], 4)}')
 
-VerboseFlag = True
+VerboseFlag = False
 
 # Output of Maximization
 if VerboseFlag == True:
@@ -383,3 +391,35 @@ if VerboseFlag == True:
         print(f'\nSum of plogs: {sum(plg.values())}')
 
     print(all_plog_values.index(min(all_plog_values)) + 1)
+
+letter_logs = {}
+for letter in letters:
+    letter_log_calc = []
+    total = 0
+    for state in states:
+        letter_log_calc.append(state.letter_probs[letter])
+    for state_letter_prob in letter_log_calc:
+        if total == 0:
+            total += state_letter_prob
+        else:
+            total = total / state_letter_prob
+    letter_logs[letter] = log(total, 2)
+positives = [(l, v) for (l, v) in sorted(letter_logs.items(), key = lambda kv:(kv[1], kv[0]), reverse=True) if v > 0]
+negatives = [(l, v) for (l, v) in sorted(letter_logs.items(), key = lambda kv:(kv[1], kv[0])) if v < 0]
+
+# Initialize positive and negative lists for output
+p = []
+n = []
+
+for (l, v) in positives:
+    p.append(l)
+for (l, v) in negatives:
+    n.append(l)
+
+pos_string = (' ').join(sorted(p))
+neg_string = (' ').join(sorted(n))
+
+print('\nI tried distinguishing consonants and vowels...\n')
+print(f'Set 1: {pos_string}')
+print(f'Set 2: {neg_string}')
+print('\n... How\'d I do?\n')
