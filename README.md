@@ -6,7 +6,7 @@ This Hidden Markov Model (HMM) probabilistically determines consonants from vowe
 
 ## Usage
 
-> NOTE: This HMM uses data from the file `english_1000.txt`. If you would like to use your own data, the format of the file must (a) be a `.txt` file, (b) have one word per line, and (c) have each line end in `#`. You can then manually change `english_1000.txt` in `hmm.py` to your own file.
+> NOTE: This HMM uses data from the file `english1000.txt`. If you would like to use your own data, the format of the file must (a) be a `.txt` file, (b) have one word per line, and (c) have each line end in `#`. You can then manually change `english1000.txt` in `hmm.py` to your own file.
 
 In the command line, type `python hmm.py`. The command line will then prompt you to enter the number of "states" you would like to use. Any number of states is acceptable, but each additional state greatly increases  processing time.
 
